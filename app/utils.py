@@ -36,11 +36,11 @@ def calculate_income_tax(gender, age, city, income):
         tax = 100000 * 0.05 + 300000 * 0.1 + 400000 * 0.15 + 500000 * 0.20 + (taxable_income - 1300000) * 0.25
 
 
-    if city == "dhaka" or city == "Chattogram":
+    if taxable_income > 0 and  (city == "dhaka" or city == "Chattogram"):
         tax = max(tax, dhaka_chattogram_tax)
-    elif city == "other city":
+    elif taxable_income > 0 and  city == "other city":
         tax = max(tax, other_city_tax)
-    else:
+    elif taxable_income > 0 and  city == "non city":
         tax = max(tax, non_city_tax)
 
     return tax

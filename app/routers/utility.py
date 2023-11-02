@@ -43,7 +43,7 @@ district_names = [
     "Feni",
     "Khagrachhari",
     "Lakshmipur",
-    "Noakhali, Bangladesh",
+    "Noakhali",
     "Rangamati",
     "Cox's Bazar",
     "Faridpur",

@@ -16,15 +16,18 @@ class Tax(BaseModel) :
     income : int
     city : str
     
+class TaxInfoResponse(BaseModel) :
+    income : int
+    city : str
+    
 class UpdateUser(BaseModel) :
     name : str
-    phone : str
-    password : str
+    age : int
+    gender : str
+    city : str
         
 class ResponseUser(BaseModel) :
-    id : int
     name : str
-    email : str
     age : int
     gender : str
     city : str
@@ -41,17 +44,17 @@ class Token(BaseModel) :
     token_type : str
 
 class TokenData(BaseModel) :
-    id : int | None = None
-    email : str | None = None
+    id : int 
+    email : str
 
 class TokenResponse(BaseModel) :
     access_token : str
     token_type : str
-    id : int | None = None
-    role : int | None = None
-    phone : str | None = None
-    name : str | None = None
-    email : str | None = None
+    id : int 
+    role : int 
+    phone : str 
+    name : str
+    email : str
     
     class Config :
         orm_mode = True
