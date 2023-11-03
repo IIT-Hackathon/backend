@@ -54,7 +54,7 @@ def calculate_income_tax(gender, age, city, income):
         tax = to_tax_on * bracket["rate"]
         taxable_income -= to_tax_on
         breakdown.append({
-            "message": f"{bracket['rate'] * 100}% tax on next {bracket['limit']} bracket.",
+            "message": f"{bracket['rate'] * 100}% tax on next {bracket['limit']} BDT",
             "amount": tax
         })
     

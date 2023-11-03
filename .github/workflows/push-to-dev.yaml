@@ -9,42 +9,34 @@ jobs:
   buildAndPush:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Login to Docker Hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
+      - name: Build and push
         uses: docker/build-push-action@v4
         with:
           context: ./
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/dumb-backend:${{ github.run_number }}
-          
-      -
-        name: Checkout Deployment Repo
+
+      - name: Checkout Deployment Repo
         uses: actions/checkout@v3
         with:
-          repository: IIT-Hackathon/deployments 
+          repository: IIT-Hackathon/deployments
           token: ${{secrets.PAT_TOKEN}}
-      -
-        name: Modify Deployment File
+      - name: Modify Deployment File
         run: |
           sed -i 's/dumb-backend:.*/dumb-backend:${{ github.run_number }}/g' stage-backend/docker-compose.yml
 
-      -
-        name: Push changes of deployment
+      - name: Push changes of deployment
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -54,23 +46,21 @@ jobs:
         env:
           REPO_KEY: ${{secrets.PAT_TOKEN}}
           USERNAME: github-actions[bot]
-          
-          
-      - 
-        name: Send custom JSON data to Slack workflow
+
+      - name: Send custom JSON data to Slack workflow
         id: slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
           # For posting a rich message using Block Kit
           payload: |
             {
-              "text": "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+              "text": "BACKEND PUSH TO DEV RESULT: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                    "text": "BACKEND PUSH TO DEV RESULT: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
                   }
                 }
               ]
