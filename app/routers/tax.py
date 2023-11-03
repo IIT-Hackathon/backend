@@ -9,18 +9,7 @@ from ..utils import calculate_income_tax, calculate_age
 import json
 from datetime import datetime
 
-router = APIRouter( tags = ["Tax"] )
-
-
-# breakdown = {
-#     "Tax For The Initial 100,000 BDT (5 Percent)" : 5000,
-#     "Tax For The Next 300,000 BDT (10 Percent) " : 30000,
-#     "Tax For The Next 400,000 BDT (15 Percent) " : 40000,
-#     "Tax For The Next 500,000 BDT (20 Percent) " : 100000,
-#     "Additional 25% Tax For The Remaining Amount: ": "To Be Calculated",
-#     "Taxable Income" : 650000,
-#     "Total Tax" : 72500
-# }
+router = APIRouter( tags = ["tax"] )
 
 city_corporations = [
     "dhaka",
@@ -41,25 +30,43 @@ def create_new_tax(tax : Tax, db: Session = Depends(get_db), user = Depends(oaut
     
     user_from_db = db.query(models.User).filter(models.User.id == user.id).first()
     age = calculate_age(user_from_db.dob)
-    calculated_tax, breakdown , taxable_income = calculate_income_tax(user_from_db.gender, age, tax.city, tax.income)
-    
-    breakdown_in_json = json.dumps(breakdown)
+    city = 'dhaka'
     if tax.city == 'dhaka' or tax.city == 'chattogram' :
         city = tax.city
     elif tax.city in city_corporations :
         city = 'other city'
     else :
-        city = 'non city'  
-    new_tax = models.Tax(year = tax.year, income = tax.income, taxable_income = taxable_income, city = city, tax = calculated_tax, user_id = user_from_db.id, breakdown=breakdown_in_json)
+        city = 'non city' 
+    calculated_tax, breakdown , taxable_income = calculate_income_tax(user_from_db.gender, age, city, tax.income)
+    breakdown_in_json = json.dumps(breakdown)
+     
+    new_tax = models.Tax(year = tax.year, income = tax.income, taxable_income = taxable_income, city = tax.city, tax = calculated_tax, user_id = user_from_db.id, breakdown=breakdown_in_json)
     db.add(new_tax)
     db.commit()
     db.refresh(new_tax)
     return new_tax 
 
+@router.post("/calculate_tax", tags=['tax'])
+def create_new_tax(tax : Tax, db: Session = Depends(get_db), user = Depends(oauth2.get_current_user)):
+    user_from_db = db.query(models.User).filter(models.User.id == user.id).first()
+    age = calculate_age(user_from_db.dob)
+    city = 'dhaka'
+    if tax.city == 'dhaka' or tax.city == 'chattogram' :
+        city = tax.city
+    elif tax.city in city_corporations :
+        city = 'other city'
+    else :
+        city = 'non city' 
+    calculated_tax, breakdown , taxable_income = calculate_income_tax(user_from_db.gender, age, city, tax.income)
+     
+    return { "tax" : calculated_tax, "breakdown" : breakdown, "taxable_income" : taxable_income } 
+
 @router.get("/reports", tags=['tax'])
 def get_tax_reports(limit : int = 10, offset : int =  0, db: Session = Depends(get_db), user = Depends(oauth2.get_current_user)):
     user_from_db = db.query(models.User).filter(models.User.id == user.id).first()
     tax_reports = db.query(models.Tax).filter(models.Tax.user_id == user_from_db.id).order_by(models.Tax.year.desc()).limit(limit=limit).offset(offset=offset).all()
+    if tax_reports is None :
+        return { "detail" : "error" }
     return tax_reports
 
 
@@ -67,6 +74,8 @@ def get_tax_reports(limit : int = 10, offset : int =  0, db: Session = Depends(g
 def get_tax_report(year : int, db: Session = Depends(get_db), user = Depends(oauth2.get_current_user)):
     user_from_db = db.query(models.User).filter(models.User.id == user.id).first()
     tax_report = db.query(models.Tax).filter(models.Tax.user_id == user_from_db.id, models.Tax.year == year).first()
+    if tax_report is None :
+        return { "detail" : "error" }
     return tax_report
 
 @router.get("/tax_info", response_model = TaxInfoResponse, tags=['tax']) 
@@ -78,7 +87,7 @@ def get_tax_info(db: Session = Depends(get_db), user = Depends(oauth2.get_curren
         return { "detail" : "error" }
     return tax_report
 
-@router.put("/tax_info", tags=['tax']) 
+@router.put("/tax_info", status_code = 200, tags=['tax']) 
 def update_tax_info(tax_info : TaxInfoResponse, db: Session = Depends(get_db), user = Depends(oauth2.get_current_user)):
     user_from_db = db.query(models.User).filter(models.User.id == user.id).first()
     current_year = datetime.now().year

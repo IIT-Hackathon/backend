@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
+TEST = os.getenv("TEST")
+print("TEST", TEST)
+
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
