@@ -15,7 +15,7 @@ jobs:
 
       - name: Send notification to slack that action triggered
         continue-on-error: true
-        id: slack
+        id: slack-trigger
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
@@ -88,7 +88,7 @@ jobs:
 
       - name: Send custom JSON data to Slack workflow
         continue-on-error: true
-        id: slack
+        id: slack-result
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
