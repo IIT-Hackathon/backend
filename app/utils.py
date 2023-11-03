@@ -88,8 +88,6 @@ def calculate_income_tax(gender, age, city, income):
                 "amount": tax
             })
     elif taxable_income > 0 and  city == "non city":
-        
-        # tax = max(tax, non_city_tax)
         if tax < non_city_tax:
             tax = non_city_tax
             breakdown.append({
