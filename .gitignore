@@ -3,4 +3,7 @@
 .env
 /.env
 
+env
+./.env
+
 
