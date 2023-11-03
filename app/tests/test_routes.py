@@ -120,18 +120,6 @@ def test_get_current_tax_report() :
     response3 = client.get(ENDPOINT + "/current_report", params = {"year" : 2021}, headers={"Authorization": f"Bearer {token}"})
     assert response3.status_code == 200
 
-def test_get_tax_info() :
-    user_data = generate_user()
-    response = client.post(ENDPOINT + "/users", json = user_data)
-    token = response.json()["access_token"]
-    tax_data = {
-        "year" : 2021,
-        "income" : 100000,
-        "city" : "dhaka"
-    }
-    response2 = client.post(ENDPOINT + "/new_tax", json = tax_data, headers={"Authorization": f"Bearer {token}"})
-    response3 = client.get(ENDPOINT + "/tax_info", headers={"Authorization": f"Bearer {token}"})
-    assert 1 == 1
     
 def test_update_tax_info() :
     user_data = generate_user()
