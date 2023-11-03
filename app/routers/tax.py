@@ -12,15 +12,15 @@ from datetime import datetime
 router = APIRouter( tags = ["Tax"] )
 
 
-breakdown = {
-    "Tax For The Initial 100,000 BDT (5 Percent)" : 5000,
-    "Tax For The Next 300,000 BDT (10 Percent) " : 30000,
-    "Tax For The Next 400,000 BDT (15 Percent) " : 40000,
-    "Tax For The Next 500,000 BDT (20 Percent) " : 100000,
-    "Additional 25% Tax For The Remaining Amount: ": "To Be Calculated",
-    "Taxable Income" : 650000,
-    "Total Tax" : 72500
-}
+# breakdown = {
+#     "Tax For The Initial 100,000 BDT (5 Percent)" : 5000,
+#     "Tax For The Next 300,000 BDT (10 Percent) " : 30000,
+#     "Tax For The Next 400,000 BDT (15 Percent) " : 40000,
+#     "Tax For The Next 500,000 BDT (20 Percent) " : 100000,
+#     "Additional 25% Tax For The Remaining Amount: ": "To Be Calculated",
+#     "Taxable Income" : 650000,
+#     "Total Tax" : 72500
+# }
 
 city_corporations = [
     "dhaka",
@@ -41,8 +41,8 @@ def create_new_tax(tax : Tax, db: Session = Depends(get_db), user = Depends(oaut
     
     user_from_db = db.query(models.User).filter(models.User.id == user.id).first()
     age = calculate_age(user_from_db.dob)
-    calculated_tax = calculate_income_tax(user_from_db.gender, age, tax.city, tax.income)
-    taxable_income = max(tax.income - 350000, 0)
+    calculated_tax, breakdown , taxable_income = calculate_income_tax(user_from_db.gender, age, tax.city, tax.income)
+    
     breakdown_in_json = json.dumps(breakdown)
     if tax.city == 'dhaka' or tax.city == 'chattogram' :
         city = tax.city
@@ -59,7 +59,7 @@ def create_new_tax(tax : Tax, db: Session = Depends(get_db), user = Depends(oaut
 @router.get("/reports", tags=['tax'])
 def get_tax_reports(limit : int = 10, offset : int =  0, db: Session = Depends(get_db), user = Depends(oauth2.get_current_user)):
     user_from_db = db.query(models.User).filter(models.User.id == user.id).first()
-    tax_reports = db.query(models.Tax).filter(models.Tax.user_id == user_from_db.id).limit(limit=limit).offset(offset=offset).all()
+    tax_reports = db.query(models.Tax).filter(models.Tax.user_id == user_from_db.id).order_by(models.Tax.year.desc()).limit(limit=limit).offset(offset=offset).all()
     return tax_reports
 
 
@@ -93,9 +93,8 @@ def update_tax_info(tax_info : TaxInfoResponse, db: Session = Depends(get_db), u
         city = 'other city'
     else :
         city = 'non city'
-    calculated_tax = calculate_income_tax(user_from_db.gender, calculate_age(user_from_db.dob), city, tax_info.income)
+    calculated_tax, breakdown , taxable_income = calculate_income_tax(user_from_db.gender, calculate_age(user_from_db.dob), city, tax_info.income)
     tax_report.tax = calculated_tax
-    taxable_income = max(tax_info.income - 350000, 0)
     tax_report.taxable_income = taxable_income
     breakdown_in_json = json.dumps(breakdown)
     tax_report.breakdown = breakdown_in_json
