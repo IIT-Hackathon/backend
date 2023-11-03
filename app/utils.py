@@ -36,7 +36,6 @@ def verify_password(plain_password, hashed_password) :
 
 def calculate_income_tax(gender, age, city, income):
     
-    
     breakdown = []
 
     if gender == "female" or age > 65:
@@ -46,6 +45,7 @@ def calculate_income_tax(gender, age, city, income):
         
         
     taxable_income = max(income - threshold, 0)
+    print(taxable_income)
     total_taxable_income = taxable_income
     tax = 0
     
@@ -69,7 +69,7 @@ def calculate_income_tax(gender, age, city, income):
     tax = sum([bracket["amount"] for bracket in breakdown])
     
 
-    if taxable_income > 0 and  (city == "dhaka" or city == "Chattogram"):
+    if total_taxable_income > 0 and  (city == "dhaka" or city == "Chattogram"):
         
         if tax < dhaka_chattogram_tax:
             tax = dhaka_chattogram_tax
@@ -79,7 +79,7 @@ def calculate_income_tax(gender, age, city, income):
             })
         
         # tax = max(tax, dhaka_chattogram_tax)
-    elif taxable_income > 0 and  city == "other city":
+    elif total_taxable_income > 0 and  city == "other city":
         # tax = max(tax, other_city_tax)
         if tax < other_city_tax:
             tax = other_city_tax
@@ -87,7 +87,7 @@ def calculate_income_tax(gender, age, city, income):
                 "message": f"Minimum tax for city corporation.",
                 "amount": tax
             })
-    elif taxable_income > 0 and  city == "non city":
+    elif total_taxable_income > 0 and  city == "non city":
         if tax < non_city_tax:
             tax = non_city_tax
             breakdown.append({
