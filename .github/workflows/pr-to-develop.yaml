@@ -18,9 +18,8 @@ jobs:
         id: changed-files-alembic
         uses: tj-actions/changed-files@v37
         with:
-          files: alembic/**  # Alternatively using: `alembic` or `alembic/*`
-          files_ignore: alembic/versions/README*  # Optionally ignore files
-        
+          files: alembic/** # Alternatively using: `alembic` or `alembic/*`
+          files_ignore: alembic/versions/README* # Optionally ignore files
 
       - name: Set up Python
         uses: actions/setup-python@v3.1.4
@@ -32,7 +31,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build and and docker container
-      
+
         run: |
           echo -e "DB_URL=${{ secrets.DEV_DB_URL }}" > ./.env
           docker build -t backend .
@@ -46,7 +45,6 @@ jobs:
           echo -e "DB_URL=${{ secrets.DEV_DB_URL }}" > ./.env
           alembic upgrade head
 
-
       - name: Run pytest
         if: ${{ steps.alembic-upgrade.outputs.exit_code == 0 }}
         run: |
@@ -58,7 +56,6 @@ jobs:
       #   env:
       #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
 
       - name: Alembic Downgrade if tests Failed and there was changes in alembic directory
         continue-on-error: true
