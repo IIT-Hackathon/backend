@@ -9,6 +9,10 @@ from .. import models, oauth2, utils
 
 router = APIRouter()
 
+@router.get("/")
+def home():
+    return {"ping": "pong"}
+
 @router.post("/users", status_code = 201, response_model = Token, tags=['users'])
 def create_user(user : User ,db : Session = Depends(get_db)) :
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
