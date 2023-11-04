@@ -1,7 +1,7 @@
 from passlib.context import CryptContext
 from datetime import datetime
 
-male_threshold = 350000
+male_threshold = 250000
 female_threshold = 400000
 senior_citizen_threshold = 400000
 
