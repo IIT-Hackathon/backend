@@ -1,0 +1,109 @@
+name: Pull Request To Develop
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Send notification to slack that action triggered
+        continue-on-error: true
+        id: slack-trigger
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "BACKEND PR to DEV STARTED: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "BACKEND PR to DEV STARTED: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      # Check if there was changes in alembic directory
+      - name: Get changed files in the alembic folder
+        id: changed-files-alembic
+        uses: tj-actions/changed-files@v37
+        with:
+          files: alembic/** # Alternatively using: `alembic` or `alembic/*`
+          files_ignore: alembic/versions/README* # Optionally ignore files
+
+      - name: Set up Python
+        uses: actions/setup-python@v3.1.4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build and and docker container
+
+        run: |
+          echo -e "DB_URL=${{ secrets.DEV_DB_URL }}" > ./.env
+          docker build -t backend .
+          docker run -d -p 8000:8000 backend
+
+      # if there was a change in alembic directory, run alembic upgrade head
+      - name: Alembic upgrade if there was changes in alembic directory
+        id: alembic-upgrade
+        if: ${{ steps.changed-files-alembic.outputs.any_changed == 'true' }}
+        run: |
+          echo -e "DB_URL=${{ secrets.DEV_DB_URL }}" > ./.env
+          alembic upgrade head
+
+      - name: Run pytest
+        if: ${{ steps.alembic-upgrade.outputs.exit_code == 0 }}
+        run: |
+          pytest
+
+      # - name: SonarQube Scan
+      #   continue-on-error: true
+      #   uses: sonarsource/sonarqube-scan-action@master
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: Alembic Downgrade if tests Failed and there was changes in alembic directory
+        continue-on-error: true
+        if: ${{ failure() && steps.changed-files-alembic.outputs.any_changed == 'true' }}
+        run: |
+          echo -e "DB_URL=${{ secrets.DEV_DB_URL }}" > ./.env
+          alembic downgrade -1
+
+      - name: Send custom JSON data to Slack workflow
+        continue-on-error: true
+        id: slack-result
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "BACKEND PR to DEV RESULT: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "BACKEND PR to DEV RESULT: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

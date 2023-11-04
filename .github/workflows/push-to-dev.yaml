@@ -1,0 +1,92 @@
+name: Build, Deploy to DockerHub and Update to deployment repository
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  buildAndPush:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Send notification to slack that action triggered
+        continue-on-error: true
+        id: slack-trigger
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "BACKEND PUSH to DEV STARTED: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "BACKEND PUSH to DEV STARTED: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: ./
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/dumb-backend:${{ github.run_number }}
+
+      - name: Checkout Deployment Repo
+        uses: actions/checkout@v3
+        with:
+          repository: IIT-Hackathon/deployments
+          token: ${{secrets.PAT_TOKEN}}
+      - name: Modify Deployment File
+        run: |
+          sed -i 's/dumb-backend:.*/dumb-backend:${{ github.run_number }}/g' stage-backend/docker-compose.yml
+
+      - name: Push changes of deployment
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Deployment update"
+          git push https://$USERNAME:$REPO_KEY@github.com/IIT-Hackathon/deployments.git
+        env:
+          REPO_KEY: ${{secrets.PAT_TOKEN}}
+          USERNAME: github-actions[bot]
+
+      - name: Send custom JSON data to Slack workflow
+        id: slack-result
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          # For posting a rich message using Block Kit
+          payload: |
+            {
+              "text": "BACKEND PUSH TO DEV RESULT: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "BACKEND PUSH TO DEV RESULT: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

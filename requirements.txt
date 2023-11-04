@@ -1,0 +1,10 @@
+fastapi
+uvicorn 
+email-validator 
+python-jose 
+httpx 
+sqlalchemy 
+psycopg2 
+passlib
+python-dotenv
+pytest
