@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from ..schemas import User, ResponseUser, Token
 from passlib.context import CryptContext
 from .. import models, oauth2
+from ..oauth2 import check_authorization
 
 router = APIRouter()
 
@@ -28,3 +29,9 @@ def create_user(user : User ,db : Session = Depends(get_db)) :
 def get_info(db: Session = Depends(get_db), user = Depends(oauth2.get_current_user)):
     user_from_db = db.query(models.User).filter(models.User.id == user.id).first()
     return user_from_db
+
+@router.get("/users", tags=['user'])
+def get_users(db: Session = Depends(get_db), user = Depends(oauth2.get_current_user)):
+    check_authorization(user)
+    users = db.query(models.User).all()
+    return users

@@ -35,7 +35,7 @@ async def upload_photo(request: Request, photo: UploadFile = File(...), title: s
     current_directory = os.path.dirname(os.path.realpath(__file__))
 
     # Create a new folder named 'photos' in the current directory if it doesn't exist
-    folder_path = os.path.join(current_directory, "..", "..", "..", "frontend", "src", "assets")
+    folder_path = os.path.join(current_directory, "..", "..", "assets")
     os.makedirs(folder_path, exist_ok=True)
 
     # Save the uploaded photo to the specified folder
@@ -44,7 +44,7 @@ async def upload_photo(request: Request, photo: UploadFile = File(...), title: s
         file_object.write(photo.file.read())
 
     # Construct the URL for the uploaded photo
-    photo_url = f"src/assets/{title}.png"
+    photo_url = f"{base_url}assets/{title}.png"
 
     # Save photo information to the database
     db = SessionLocal()
@@ -55,6 +55,7 @@ async def upload_photo(request: Request, photo: UploadFile = File(...), title: s
     db.close()
 
     return {"filename": photo.filename, "title": title, "description": description, "category": category, "photo_url": photo_url}
+
 
 @router.get("/photos", tags=['photo'])
 def get_photos(db: Session = Depends(get_db), user = Depends(oauth2.get_current_user)):

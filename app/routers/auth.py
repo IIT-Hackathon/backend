@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from ..schemas import Token
 from .. import models, utils, oauth2
 
-
 router = APIRouter()
+
 @router.post("/login", response_model=Token, tags=['auth'])
 def login_user(user_credentials: dict = Body(...), db: Session = Depends(get_db)):
     username = user_credentials.get("username")

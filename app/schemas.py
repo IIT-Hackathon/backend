@@ -12,6 +12,12 @@ class Photo(BaseModel) :
     title : str
     description : str
     category : str
+    
+class Booking(BaseModel) :
+    user_id : int
+    date : str
+    service_type : str
+    status : int
      
 class ResponseUser(BaseModel) :
     id : int
