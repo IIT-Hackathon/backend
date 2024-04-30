@@ -5,6 +5,8 @@ from .database import get_db
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from . import models
+from .database import SessionLocal
 
 SECRET_KEY = "1234567890"
 ALGORITHM = "HS256"
@@ -39,3 +41,11 @@ def get_current_user(token : str = Depends(oauth2_scheme), db : Session = Depend
                                           )
     token_data = verify_access_token(token, credentials_exception)
     return token_data
+
+def check_authorization(user) :
+    db = SessionLocal()
+    user_from_db = db.query(models.User).filter(models.User.id == user.id).first()
+    if user_from_db.role != 1 :
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail = "Unauthorized Access")
+    db.close()
+    return user_from_db

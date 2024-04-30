@@ -1,36 +1,23 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
-from datetime import date
 
 
 class User(BaseModel) :
-    name : str
+    username : str
     email : EmailStr
     password : str
-    dob : date
-    gender : str
-    city : str
+    role : int
     
-class Tax(BaseModel) :
-    year : int
-    income : int
-    city : str
-    
-class TaxInfoResponse(BaseModel) :
-    income : int
-    city : str
-    
-class UpdateUser(BaseModel) :
-    name : str
-    age : int
-    gender : str
-    city : str
-        
+class Photo(BaseModel) :
+    photo : str
+    title : str
+    description : str
+    category : str
+     
 class ResponseUser(BaseModel) :
-    name : str
-    age : int
-    gender : str
-    city : str
+    id : int
+    username : str
+    email : EmailStr
+    role : int 
 
     class Config :
         orm_mode = True
@@ -50,11 +37,7 @@ class TokenData(BaseModel) :
 class TokenResponse(BaseModel) :
     access_token : str
     token_type : str
-    id : int 
-    role : int 
-    phone : str 
-    name : str
-    email : str
+    user : ResponseUser
     
     class Config :
         orm_mode = True

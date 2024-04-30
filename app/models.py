@@ -1,33 +1,29 @@
 from .database import Base
-from sqlalchemy import Integer, Boolean, String, Column, ForeignKey, Float
-from sqlalchemy.sql.sqltypes import TIMESTAMP
-from sqlalchemy.sql.expression import text
+from sqlalchemy import Integer, String, Column, ForeignKey
 from sqlalchemy.orm import relationship
 
 class User(Base) :
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, nullable=False)
-    name = Column(String, nullable=False)
-    email = Column(String, nullable=False)
-    password = Column(String, nullable=False)
-    is_verified = Column(Boolean, nullable=False, default=True)
-    dob = Column(TIMESTAMP(timezone=True), nullable=False)
-    gender = Column(String, nullable=False)
-    city = Column(String, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'))
+    username = Column(String(50), nullable=False)
+    email = Column(String(100), nullable=False)
+    password = Column(String(100), nullable=False)
+    role = Column(Integer, nullable=False)
+    bookings = relationship("Booking", back_populates="user")
     
-class Tax(Base) :
-    __tablename__ = "tax_reports"
+class Booking(Base):
+    __tablename__ = "bookings"
     id = Column(Integer, primary_key=True, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    year = Column(Integer, nullable=False)
-    income = Column(Integer, nullable=False)
-    taxable_income = Column(Integer, nullable=False)
-    tax = Column(Float, nullable=False)
-    city = Column(String, nullable=False)
-    breakdown = Column(String, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    date = Column(String(20), nullable=False)
+    service_type = Column(String(20), nullable=True)
+    status = Column(Integer, nullable=False)
+    user = relationship("User", back_populates="bookings")
     
-    
-
-
+class Photo(Base):
+    __tablename__ = "photos"
+    id = Column(Integer, primary_key=True, nullable=False)
+    photo = Column(String(300), nullable=False)
+    title = Column(String(100), nullable=False)
+    description = Column(String(300), nullable=True)
+    category = Column(String(50), nullable=False)
